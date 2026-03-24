@@ -16,8 +16,9 @@ export const SENTIMENT_FIELD_NAMES = {
   空间龙连板: 'top_height',
 }
 
-/** 涨停数据表（第一张图） */
+/** 涨停数据表（第一张图）；「日期」可选，有则按交易日与上方情绪快照对齐筛选 */
 export const LIMIT_UP_FIELD_NAMES = {
+  日期: 'date',
   股票代码: 'stock_code',
   股票名称: 'stock_name',
   涨跌幅: 'pct_change',
@@ -75,12 +76,22 @@ function toMs(ts) {
   return n < 1e12 ? n * 1000 : n
 }
 
+/** A 股展示用：按北京时间日历日，避免 UTC 与本地混用差一天 */
 export function formatDateFromRecordTime(ts) {
   const ms = toMs(ts)
   if (!Number.isFinite(ms)) return null
-  const d = new Date(ms)
-  const pad = (x) => String(x).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+  try {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Shanghai',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date(ms))
+  } catch {
+    const d = new Date(ms)
+    const pad = (x) => String(x).padStart(2, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+  }
 }
 
 /**
@@ -121,6 +132,13 @@ export function finalizeSentimentFields(fields, record) {
 
 export function finalizeLimitUpFields(fields) {
   const out = stripBitableFieldIdKeys(fields)
+  if (out.date != null && out.date !== '') {
+    const d = out.date
+    if (typeof d === 'number' || (typeof d === 'string' && /^\d+$/.test(String(d).trim()))) {
+      const fd = formatDateFromRecordTime(d)
+      if (fd) out.date = fd
+    }
+  }
   const numKeys = ['pct_change', 'latest_price', 'board_count', 'turnover', 'turnover_rate']
   for (const k of numKeys) {
     if (out[k] != null && out[k] !== '') {

@@ -1,16 +1,22 @@
-export default function LimitUpGrid({ rows, hasZtTable }) {
+export default function LimitUpGrid({ rows, hasZtTable, alignedDate, filterNotice }) {
   if (!rows?.length) {
     return (
       <section className="overflow-hidden rounded-lg border border-white/10">
         <div className="border-b border-white/10 bg-white/[0.04] px-3 py-2">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
             涨停数据明细（飞书）
+            {alignedDate ? (
+              <span className="ml-2 font-mono text-[11px] font-normal text-amber-500/90">
+                · 对齐 {alignedDate}
+              </span>
+            ) : null}
           </h2>
         </div>
         <p className="px-3 py-4 text-xs text-zinc-500">
-          {hasZtTable
-            ? '该表中暂无记录，或列名与预期不一致（需包含：股票代码、股票名称、涨跌幅等）。'
-            : '未配置涨停表：在 .env 中设置 FEISHU_BITABLE_TABLE_ID_ZT 为涨停数据表的 table_id，并重启 dev。'}
+          {!hasZtTable
+            ? '未配置涨停表：在 .env 中设置 FEISHU_BITABLE_TABLE_ID_ZT 为涨停数据表的 table_id，并重启 dev。'
+            : filterNotice ||
+              '该表中暂无记录，或列名与预期不一致（需包含：股票代码、股票名称等）。'}
         </p>
       </section>
     )
@@ -20,8 +26,17 @@ export default function LimitUpGrid({ rows, hasZtTable }) {
     <section className="overflow-hidden rounded-lg border border-white/10">
       <div className="border-b border-white/10 bg-white/[0.04] px-3 py-2">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
-          涨停数据明细（{rows.length} 条）
+          涨停数据明细
+          {alignedDate ? (
+            <span className="ml-2 font-mono text-[11px] font-normal text-amber-500/90">
+              · 交易日 {alignedDate}
+            </span>
+          ) : null}
+          <span className="ml-2 text-zinc-500">（{rows.length} 条）</span>
         </h2>
+        {filterNotice ? (
+          <p className="mt-1.5 text-[11px] leading-snug text-amber-200/80">{filterNotice}</p>
+        ) : null}
       </div>
       <div className="max-h-[320px] overflow-auto">
         <table className="w-full border-collapse text-left font-mono text-[11px]">

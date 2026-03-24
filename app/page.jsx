@@ -3,10 +3,17 @@
 import dynamic from 'next/dynamic'
 import { useMemo } from 'react'
 import AIRecapPanel from '@/components/AIRecapPanel.jsx'
+import DataDateStrip from '@/components/DataDateStrip.jsx'
 import Header from '@/components/Header.jsx'
 import HeroMetrics from '@/components/HeroMetrics.jsx'
 import HistoryDataGrid from '@/components/HistoryDataGrid.jsx'
 import LimitUpGrid from '@/components/LimitUpGrid.jsx'
+import {
+  filterLimitUpRowsBySnapshotDate,
+  getTodayYmdShanghai,
+  normalizeDateKey,
+  pickSnapshotRow,
+} from '@/lib/tradingDate.js'
 import { useFeishuData } from '@/hooks/useFeishuData.js'
 
 const SentimentTrendChart = dynamic(() => import('@/components/SentimentTrendChart.jsx'), {
@@ -31,12 +38,19 @@ export default function HomePage() {
     [limitUpRecords],
   )
 
-  const latest = useMemo(() => {
-    if (!rows.length) return null
-    return [...rows]
-      .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')))
-      .at(-1)
-  }, [rows])
+  /** 有「今日」情绪行则优先用于 Hero / 复盘；否则用最新一日 */
+  const snapshot = useMemo(() => pickSnapshotRow(rows), [rows])
+
+  const isTodaySnapshot = useMemo(() => {
+    if (!snapshot?.date) return false
+    return normalizeDateKey(snapshot.date) === getTodayYmdShanghai()
+  }, [snapshot])
+
+  const limitUpDisplay = useMemo(
+    () =>
+      filterLimitUpRowsBySnapshotDate(limitUpRows, snapshot?.date, isTodaySnapshot),
+    [limitUpRows, snapshot?.date, isTodaySnapshot],
+  )
 
   return (
     <div className="min-h-screen bg-quant-bg px-4 py-3 text-quant-text">
@@ -67,7 +81,9 @@ export default function HomePage() {
           <p className="text-xs text-zinc-500">数据源：飞书多维表格</p>
         )}
 
-        <HeroMetrics latest={loading ? null : latest} />
+        <DataDateStrip date={snapshot?.date} loading={loading} isToday={isTodaySnapshot} />
+
+        <HeroMetrics latest={loading ? null : snapshot} />
 
         <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
           <div className="xl:col-span-2">
@@ -79,11 +95,23 @@ export default function HomePage() {
             <SentimentTrendChart rows={loading ? [] : rows} />
           </div>
           <div className="xl:col-span-1">
-            <AIRecapPanel recapText={latest?.ai_recap_text} />
+            <AIRecapPanel
+              recapText={snapshot?.ai_recap_text}
+              title={
+                isTodaySnapshot
+                  ? '今日复盘 · AI 深度复盘'
+                  : '游资视点 · AI 深度复盘'
+              }
+            />
           </div>
         </div>
 
-        <LimitUpGrid rows={loading ? [] : limitUpRows} hasZtTable={Boolean(meta?.hasZtTable)} />
+        <LimitUpGrid
+          rows={loading ? [] : limitUpDisplay.rows}
+          hasZtTable={Boolean(meta?.hasZtTable)}
+          alignedDate={snapshot?.date}
+          filterNotice={limitUpDisplay.notice}
+        />
 
         <HistoryDataGrid rows={loading ? [] : rows} />
       </div>
