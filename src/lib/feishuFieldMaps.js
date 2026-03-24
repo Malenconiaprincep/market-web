@@ -21,6 +21,8 @@ export const LIMIT_UP_FIELD_NAMES = {
   日期: 'date',
   股票代码: 'stock_code',
   股票名称: 'stock_name',
+  /** 与 akshare 东财涨停池「所属行业」一致；表内可填可空，空时复盘页会尝试用引擎接口补全 */
+  所属行业: 'industry',
   涨跌幅: 'pct_change',
   最新价: 'latest_price',
   连板数: 'board_count',
@@ -148,5 +150,6 @@ export function finalizeLimitUpFields(fields) {
   }
   if (out.stock_code == null) out.stock_code = ''
   if (out.stock_name == null) out.stock_name = ''
+  if (out.industry == null) out.industry = ''
   return out
 }

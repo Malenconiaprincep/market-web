@@ -1,11 +1,11 @@
-'use client'
+"use client"
 
-import { useEffect, useMemo, useState } from 'react'
-import Header from '@/components/Header.jsx'
-import HeroMetrics from '@/components/HeroMetrics.jsx'
-import RealtimePoolTable from '@/components/RealtimePoolTable.jsx'
-import { useRealtimeMarket } from '@/hooks/useRealtimeMarket.js'
-import { INTRADAY_SLOTS, getSuggestedIntradaySlot } from '@/lib/tradingDate.js'
+import { useEffect, useMemo, useState } from "react"
+import Header from "@/components/Header.jsx"
+import HeroMetrics from "@/components/HeroMetrics.jsx"
+import RealtimePoolTable from "@/components/RealtimePoolTable.jsx"
+import { useRealtimeMarket } from "@/hooks/useRealtimeMarket.js"
+import { INTRADAY_SLOTS, getSuggestedIntradaySlot } from "@/lib/tradingDate.js"
 
 function snapshotToHero(snapshot) {
   if (!snapshot) return null
@@ -15,30 +15,31 @@ function snapshotToHero(snapshot) {
     dt_count: snapshot.dt_count,
     top_stock: snapshot.top_stock,
     top_height: snapshot.top_height,
-    cycle_phase: '盘中快照',
+    cycle_phase: "盘中快照",
     cycle_note: `${snapshot.date} · ${snapshot.slot}`,
   }
 }
 
 function formatTime(d) {
-  if (!d) return '—'
-  const pad = (n) => String(n).padStart(2, '0')
+  if (!d) return "—"
+  const pad = (n) => String(n).padStart(2, "0")
   return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
 }
 
 export default function RealtimePage() {
-  const [slot, setSlot] = useState('09:40')
-  const [pollMs, setPollMs] = useState(30_000)
+  const [slot, setSlot] = useState("09:40")
+  const [pollMs, setPollMs] = useState(120_000)
 
   useEffect(() => {
     setSlot(getSuggestedIntradaySlot())
   }, [])
 
-  const { loading, error, intraday, limitUp, limitDown, lastUpdated, refresh } = useRealtimeMarket({
-    slot,
-    pollMs,
-    enabled: true,
-  })
+  const { loading, error, intraday, limitUp, limitDown, lastUpdated, refresh } =
+    useRealtimeMarket({
+      slot,
+      pollMs,
+      enabled: true,
+    })
 
   const heroLatest = useMemo(() => {
     const snap = intraday?.snapshot
@@ -86,7 +87,9 @@ export default function RealtimePage() {
             {loading ? <span className="text-zinc-500">加载中…</span> : null}
           </div>
           <div className="flex flex-col items-end gap-1 text-right">
-            <span className="text-[11px] text-zinc-500">上次刷新 {formatTime(lastUpdated)}</span>
+            <span className="text-[11px] text-zinc-500">
+              上次刷新 {formatTime(lastUpdated)}
+            </span>
             <button
               type="button"
               onClick={() => refresh()}
@@ -105,13 +108,23 @@ export default function RealtimePage() {
 
         {skipped && (
           <p className="rounded border border-amber-500/35 bg-amber-500/10 px-3 py-2 text-sm text-amber-200/90">
-            非交易日：盘中任务已跳过（{intraday?.reason || 'weekend'}）。涨跌停池仍可尝试拉取当日接口数据；若数据源无行情则为空。
+            非交易日：盘中任务已跳过（{intraday?.reason || "weekend"}
+            ）。涨跌停池仍可尝试拉取当日接口数据；若数据源无行情则为空。
           </p>
         )}
 
+        {!skipped && intraday?.hint ? (
+          <p className="rounded border border-cyan-500/30 bg-cyan-500/10 px-3 py-2 text-[11px] leading-relaxed text-cyan-100/90">
+            <span className="font-mono text-cyan-400/90">
+              [{intraday?.snapshot_mode || "—"}]
+            </span>{" "}
+            {intraday.hint}
+          </p>
+        ) : null}
+
         {alertInfo?.evaluated && alertInfo?.fired && (
           <p className="rounded border border-red-500/50 bg-red-500/15 px-3 py-2 text-sm text-red-200">
-            强预警触发：{alertInfo.reason || '冰点试错信号'}
+            强预警触发：{alertInfo.reason || "冰点试错信号"}
           </p>
         )}
 
@@ -131,12 +144,20 @@ export default function RealtimePage() {
         </div>
 
         <p className="text-[11px] leading-relaxed text-zinc-500">
-          配置：在 <code className="font-mono text-zinc-400">.env.local</code> 中设置{' '}
-          <code className="font-mono text-zinc-400">MARKET_SKILLS_API_BASE</code>（如{' '}
+          配置：在 <code className="font-mono text-zinc-400">.env.local</code>{" "}
+          中设置{" "}
+          <code className="font-mono text-zinc-400">
+            MARKET_SKILLS_API_BASE
+          </code>
+          （如{" "}
           <code className="font-mono text-zinc-400">http://127.0.0.1:8787</code>
-          ）指向已启动的 market-skills；若对方启用了{' '}
-          <code className="font-mono text-zinc-400">INTRADAY_API_SECRET</code>，请同步设置{' '}
-          <code className="font-mono text-zinc-400">MARKET_SKILLS_API_SECRET</code>。
+          ）指向已启动的 market-skills；若对方启用了{" "}
+          <code className="font-mono text-zinc-400">INTRADAY_API_SECRET</code>
+          ，请同步设置{" "}
+          <code className="font-mono text-zinc-400">
+            MARKET_SKILLS_API_SECRET
+          </code>
+          。
         </p>
       </div>
     </div>

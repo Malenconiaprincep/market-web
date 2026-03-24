@@ -55,6 +55,7 @@ export default function LimitUpGrid({
             <tr className="text-zinc-400">
               <th className="border-b border-white/10 px-2 py-1.5">代码</th>
               <th className="border-b border-white/10 px-2 py-1.5">名称</th>
+              <th className="border-b border-white/10 px-2 py-1.5">所属行业</th>
               <th className="border-b border-white/10 px-2 py-1.5">涨跌幅</th>
               <th className="border-b border-white/10 px-2 py-1.5">最新价</th>
               <th className="border-b border-white/10 px-2 py-1.5">连板</th>
@@ -68,6 +69,12 @@ export default function LimitUpGrid({
                 <td className="whitespace-nowrap px-2 py-1.5 text-zinc-300">{r.stock_code}</td>
                 <td className="max-w-[120px] truncate px-2 py-1.5 text-zinc-300" title={r.stock_name}>
                   {r.stock_name}
+                </td>
+                <td
+                  className="max-w-[100px] truncate px-2 py-1.5 text-zinc-400"
+                  title={r.industry || ''}
+                >
+                  {r.industry != null && String(r.industry).trim() !== '' ? r.industry : '—'}
                 </td>
                 <td className="whitespace-nowrap px-2 py-1.5 tabular-nums text-red-500">
                   {r.pct_change != null && r.pct_change !== '' ? `${Number(r.pct_change).toFixed(2)}%` : '—'}

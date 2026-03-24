@@ -2,6 +2,8 @@
 
 import dynamic from 'next/dynamic'
 import { useEffect, useMemo, useState } from 'react'
+
+import { buildIndustryLookupFromAkshareRows, normalizeAStockCode } from '@/lib/limitUpIndustry.js'
 import AIRecapPanel from '@/components/AIRecapPanel.jsx'
 import DataDateStrip from '@/components/DataDateStrip.jsx'
 import Header from '@/components/Header.jsx'
@@ -87,6 +89,44 @@ export default function Dashboard() {
     () => filterLimitUpRowsBySnapshotDate(limitUpRows, snapshot?.date, isTodaySnapshot),
     [limitUpRows, snapshot?.date, isTodaySnapshot],
   )
+
+  /** 与 market-skills ak.stock_zt_pool_em 同源：按当前复盘日拉 /api/limit_up，补全「所属行业」 */
+  const [industryByCode, setIndustryByCode] = useState(() => new Map())
+
+  useEffect(() => {
+    const target = normalizeDateKey(snapshot?.date)
+    if (!target) {
+      setIndustryByCode(new Map())
+      return
+    }
+    const ymd = target.replace(/-/g, '')
+    let cancelled = false
+    fetch(`/api/market-skills/limit_up?date=${encodeURIComponent(ymd)}`, { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((j) => {
+        if (cancelled || !j?.ok || !Array.isArray(j.rows)) return
+        setIndustryByCode(buildIndustryLookupFromAkshareRows(j.rows))
+      })
+      .catch(() => {
+        if (!cancelled) setIndustryByCode(new Map())
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [snapshot?.date])
+
+  const limitUpRowsForGrid = useMemo(() => {
+    const rows = limitUpDisplay.rows
+    if (!rows?.length || industryByCode.size === 0) return rows
+    return rows.map((r) => {
+      const hasFeishu = r.industry != null && String(r.industry).trim() !== ''
+      if (hasFeishu) return r
+      const code = normalizeAStockCode(r.stock_code)
+      const ind = code ? industryByCode.get(code) : null
+      if (ind == null || ind === '') return r
+      return { ...r, industry: ind }
+    })
+  }, [limitUpDisplay.rows, industryByCode])
 
   /** 仅当当前展示日为「今日」时用盘中引擎覆盖 Hero；回看历史日只用飞书/Mock 行 */
   const heroLatest = useMemo(() => {
@@ -180,7 +220,7 @@ export default function Dashboard() {
             </div>
             <div className="flex min-h-[200px] flex-col overflow-hidden xl:col-span-5 xl:h-[min(42vh,480px)] xl:min-h-[240px]">
               <LimitUpGrid
-                rows={loading ? [] : limitUpDisplay.rows}
+                rows={loading ? [] : limitUpRowsForGrid}
                 hasZtTable={Boolean(meta?.hasZtTable)}
                 alignedDate={snapshot?.date}
                 filterNotice={limitUpDisplay.notice}

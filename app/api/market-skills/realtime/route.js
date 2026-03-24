@@ -1,10 +1,18 @@
 import { NextResponse } from 'next/server'
 
-import { getMarketSkillsBase, marketSkillsHeaders } from '@/lib/marketSkillsProxy.js'
+import {
+  getMarketSkillsBase,
+  marketSkillsBaseConfigError,
+  marketSkillsHeaders,
+} from '@/lib/marketSkillsProxy.js'
 
 /** 转发 FastAPI GET /api/realtime（盘中快照 + 预警） */
 export async function GET() {
   const base = getMarketSkillsBase()
+  const cfgErr = marketSkillsBaseConfigError(base)
+  if (cfgErr) {
+    return NextResponse.json({ ok: false, error: cfgErr }, { status: 503 })
+  }
   if (!base) {
     return NextResponse.json(
       {
