@@ -1,7 +1,18 @@
-export default function LimitUpGrid({ rows, hasZtTable, alignedDate, filterNotice }) {
+/**
+ * @param {{ className?: string, scrollClassName?: string }} props
+ * scrollClassName：表体滚动区域 class，单屏布局时传 max-h-full 等
+ */
+export default function LimitUpGrid({
+  rows,
+  hasZtTable,
+  alignedDate,
+  filterNotice,
+  className = '',
+  scrollClassName = '',
+}) {
   if (!rows?.length) {
     return (
-      <section className="overflow-hidden rounded-lg border border-white/10">
+      <section className={`flex min-h-0 flex-col overflow-hidden rounded-lg border border-white/10 ${className}`}>
         <div className="border-b border-white/10 bg-white/[0.04] px-3 py-2">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
             涨停数据明细（飞书）
@@ -23,7 +34,7 @@ export default function LimitUpGrid({ rows, hasZtTable, alignedDate, filterNotic
   }
 
   return (
-    <section className="overflow-hidden rounded-lg border border-white/10">
+    <section className={`flex min-h-0 flex-col overflow-hidden rounded-lg border border-white/10 ${className}`}>
       <div className="border-b border-white/10 bg-white/[0.04] px-3 py-2">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
           涨停数据明细
@@ -38,9 +49,9 @@ export default function LimitUpGrid({ rows, hasZtTable, alignedDate, filterNotic
           <p className="mt-1.5 text-[11px] leading-snug text-amber-200/80">{filterNotice}</p>
         ) : null}
       </div>
-      <div className="max-h-[320px] overflow-auto">
+      <div className={`min-h-0 flex-1 overflow-auto ${scrollClassName}`}>
         <table className="w-full border-collapse text-left font-mono text-[11px]">
-          <thead className="sticky top-0 bg-quant-bg">
+          <thead className="sticky top-0 z-10 bg-quant-bg shadow-[0_1px_0_rgba(255,255,255,0.08)]">
             <tr className="text-zinc-400">
               <th className="border-b border-white/10 px-2 py-1.5">代码</th>
               <th className="border-b border-white/10 px-2 py-1.5">名称</th>

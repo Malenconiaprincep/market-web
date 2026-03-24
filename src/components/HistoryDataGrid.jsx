@@ -7,7 +7,10 @@ function parseDate(s) {
   return new Date(y, m - 1, d).getTime()
 }
 
-export default function HistoryDataGrid({ rows }) {
+/**
+ * @param {{ rows: Array, className?: string }} props
+ */
+export default function HistoryDataGrid({ rows, className = '' }) {
   const [order, setOrder] = useState('desc')
 
   const sorted = useMemo(() => {
@@ -25,15 +28,17 @@ export default function HistoryDataGrid({ rows }) {
   }
 
   return (
-    <section className="overflow-hidden rounded-lg border border-white/10">
-      <div className="border-b border-white/10 bg-white/[0.04] px-3 py-2">
+    <section
+      className={`flex min-h-0 flex-col overflow-hidden rounded-lg border border-white/10 ${className}`}
+    >
+      <div className="shrink-0 border-b border-white/10 bg-white/[0.04] px-3 py-2">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
           历史明细（近 15 日）
         </h2>
       </div>
-      <div className="overflow-x-auto">
+      <div className="min-h-0 flex-1 overflow-x-auto overflow-y-auto">
         <table className="w-full border-collapse text-left font-mono text-xs">
-          <thead>
+          <thead className="sticky top-0 z-10 bg-quant-bg shadow-[0_1px_0_rgba(255,255,255,0.08)]">
             <tr className="text-zinc-400">
               <th className="whitespace-nowrap border-b border-white/10 px-3 py-2">
                 <button

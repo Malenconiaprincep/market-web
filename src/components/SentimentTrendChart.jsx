@@ -7,7 +7,11 @@ const COLD = '#22c55e'
 const TEXT = '#EAEAEB'
 const AXIS = 'rgba(255,255,255,0.12)'
 
-export default function SentimentTrendChart({ rows }) {
+/**
+ * @param {{ rows: Array, fill?: boolean }} props
+ * fill=true 时占满父容器高度（父级需有明确高度与 min-h-0），用于单屏布局。
+ */
+export default function SentimentTrendChart({ rows, fill = false }) {
   const option = useMemo(() => {
     const dates = rows.map((r) => r.date)
     const temps = rows.map((r) => r.temperature)
@@ -125,23 +129,33 @@ export default function SentimentTrendChart({ rows }) {
     }
   }, [rows])
 
+  const chartStyle = fill
+    ? { height: '100%', width: '100%', minHeight: 160 }
+    : { height: 360, width: '100%' }
+
   if (!rows?.length) {
     return (
-      <div className="flex h-[360px] items-center justify-center rounded-lg border border-white/10 bg-white/[0.02] text-sm text-zinc-500">
+      <div
+        className={`flex items-center justify-center rounded-lg border border-white/10 bg-white/[0.02] text-sm text-zinc-500 ${fill ? 'h-full min-h-[160px]' : 'h-[360px]'}`}
+      >
         暂无图表数据
       </div>
     )
   }
 
   return (
-    <div className="rounded-lg border border-white/10 bg-white/[0.02] p-2">
-      <ReactECharts
-        option={option}
-        style={{ height: 360, width: '100%' }}
-        opts={{ renderer: 'canvas' }}
-        notMerge
-        lazyUpdate
-      />
+    <div
+      className={`rounded-lg border border-white/10 bg-white/[0.02] p-2 ${fill ? 'flex h-full min-h-0 flex-col' : ''}`}
+    >
+      <div className={fill ? 'min-h-0 flex-1' : ''}>
+        <ReactECharts
+          option={option}
+          style={chartStyle}
+          opts={{ renderer: 'canvas' }}
+          notMerge
+          lazyUpdate
+        />
+      </div>
     </div>
   )
 }
